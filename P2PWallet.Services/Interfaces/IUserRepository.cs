@@ -11,12 +11,12 @@ namespace P2PWallet.Services.Interfaces
     {
         Task<BaseResponseDTO> RegisterUser(CreateUserDTO userDTO);
         Task<BaseResponseDTO> LoginUser(LoginUserDTO userDTO);
-        Task<BaseResponseDTO> GetUserById(int id);
+        Task<BaseResponseDTO> GetUserDetails();
         Task<bool> CheckUserExists(string email);
         Task<BaseResponseDTO> CreatePin(CreatePinDTO pin);
         Task<BaseResponseDTO> ChangePin(ChangePinDTO pinDTO);
         Task<BaseResponseDTO> ForgotPassword(string email);
-
+        Task<BaseResponseDTO> VerifyToken(VerifyEmailDTO verifyEmailDTO);
         Task<BaseResponseDTO> PasswordReset(ResetPasswordDTO resetPasswordDTO);
         Task<BaseResponseDTO> ChangePassword(PasswordDTO passwordDTO);
         Task<BaseResponseDTO> UpdateUserById(UpdateUserDTO passwordDTO);

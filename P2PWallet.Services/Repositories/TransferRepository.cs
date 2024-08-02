@@ -24,7 +24,7 @@ namespace P2PWallet.Services.Repositories
             _context = context;
             _httpContextAccessor = httpContextAccessor;
         }
-        public async Task<IQueryable<Transfer>> GetAllTransfers()
+        public async Task<List<Transfer>> GetAllTransfers()
         {
             try
             {
@@ -32,7 +32,7 @@ namespace P2PWallet.Services.Repositories
                 var user = await _context.Users.Include(x => x.Accounts).FirstOrDefaultAsync(x=>Convert.ToString(x.Id) == userId);
                 if (user.Accounts.Count == 0) return null;
                 var acctNum = user.Accounts.FirstOrDefault(x => x.Currency == "NGN").AccountNumber;
-                var transfers = _context.Transfers.Where(x => x.SenderId == acctNum || x.BeneficiaryId == acctNum).AsQueryable();
+                var transfers = await _context.Transfers.Where(x => x.SenderId == acctNum || x.BeneficiaryId == acctNum).ToListAsync();
                 return transfers;
                 
             }catch (Exception ex)

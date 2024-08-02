@@ -26,19 +26,13 @@ namespace P2PWallet.Api.Controllers
             return Ok(obj);
         }
 
-        [HttpPost("")]
-        public async Task<IActionResult> CreateAccount()
-        {
-            var obj = await _accountRepository.CreateAccount();
-            if (!obj.Status) return NotFound(obj);
-            return CreatedAtAction(nameof(CreateAccount), obj);
-        }
-          [HttpPost("transfer")]
+        
+        [HttpPost("transfer")]
         public async Task<IActionResult> SendMoney([FromBody] TransferDTO transaction)
         {
             var obj = await _accountRepository.TransferMoney(transaction);
             if (!obj.Status) return NotFound(obj);
-            return CreatedAtAction(nameof(CreateAccount), obj);
+            return Ok(obj);
         }
 
         [HttpGet("account/{id}")]

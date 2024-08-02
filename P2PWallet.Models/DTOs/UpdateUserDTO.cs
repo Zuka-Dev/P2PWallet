@@ -9,6 +9,7 @@ namespace P2PWallet.Models.DTOs
     public class UpdateUserDTO
     {
         public string LastName { get; set; }
+        public string? ImageBase64 { get; set; }
         public string Phone { get; set; }
         public string Address { get; set; }
     }

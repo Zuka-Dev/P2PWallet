@@ -20,27 +20,15 @@ namespace P2PWallet.Api.Controllers
             _transferRepository = transferRepository;
         }
         [HttpGet]
-        public async Task<IActionResult> GetAllTransactions([FromQuery] TransferFilter query)
+        public async Task<IActionResult> GetAllTransactions()
         {
-            IQueryable<Transfer> transfers = await _transferRepository.GetAllTransfers();
+            var transfers = await _transferRepository.GetAllTransfers();
          
-            
-            if (query.Year.HasValue)
-            {
-                transfers = transfers.Where(t => t.TransactionTime.Year == query.Year);
-
-                if (query.Month.HasValue)
-                {
-                    transfers = transfers.Where(t => t.TransactionTime.Month == query.Month);
-                }
-            }
-
-
             return Ok(new BaseResponseDTO
             {
                 Status = true,
                 StatusMessage = "All transaction returned",
-                Data = transfers.ToList()
+                Data = transfers
             });
         }
         [HttpGet("{id:guid}")]

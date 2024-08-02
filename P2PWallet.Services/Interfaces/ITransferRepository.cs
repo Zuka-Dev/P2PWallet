@@ -11,7 +11,7 @@ namespace P2PWallet.Services.Interfaces
 {
     public interface ITransferRepository
     {
-        Task<IQueryable<Transfer>> GetAllTransfers();
+        Task<List<Transfer>> GetAllTransfers();
         Task<BaseResponseDTO> GetTransferById(Guid id);
     }
 }

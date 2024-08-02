@@ -58,6 +58,16 @@ namespace P2PWallet.Services.Repositories
             await SendEmail(user.Email, "Password Reset", emailTemplate);
       
         }
+        public async Task SendVerificationEmail(User user, string url)
+        {
+            var emailTemplate = await LoadEmailTemplate(_config.GetSection("EmailTemplates:VerifyTemplatePath").Value);
+            emailTemplate = emailTemplate.Replace("[[FirstName]]", user.FirstName);
+            emailTemplate = emailTemplate.Replace("[[verificationLink]]", url);
+            emailTemplate = emailTemplate.Replace("[[Email]]", user.Email);
+            await SendEmail(user.Email, "Email Verification", emailTemplate);
+      
+        }
+
         private async Task<string> LoadEmailTemplate(string templatePath)
         {
             try

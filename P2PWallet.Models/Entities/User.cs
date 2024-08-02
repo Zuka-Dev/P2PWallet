@@ -22,12 +22,14 @@ namespace P2PWallet.Models.Entities
 
         public List<SecurityQuestion>? SecurityQuestions { get; set; }
         public string Address { get; set; }
+        public byte[]? ImageBase64Byte { get; set; }
         public string? VerificationToken { get; set; }
         public DateTime? VerifiedAt { get; set; }
         public string? PasswordResetToken { get; set; }
         
         public DateTime? ResetTokenExpires { get; set; }
-        
+
+        public bool? IsVerified { get; set; } = false;
 
         public List<Account> Accounts { get; set; } = new List<Account>();
 

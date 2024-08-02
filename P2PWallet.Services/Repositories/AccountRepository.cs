@@ -28,40 +28,19 @@ namespace P2PWallet.Services.Repositories
             _httpContextAccessor = httpContextAccessor;
             _emailService = emailService;
         }
-        public async Task<BaseResponseDTO> CreateAccount()
+        public async Task<bool> CreateAccount(User user)
         {
             try
             {
-                var userIdClaim = _httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber);
-                if (userIdClaim == null)
-                {
-                    new BaseResponseDTO
-                    {
-                        Status = false,
-                        StatusMessage = "Missing or invalid user ID in JWT token",
-                        Data = new { }
-                    };
-                }
-                var userId = userIdClaim?.Value;
-                var user = await _context.Users.FirstOrDefaultAsync(x => Convert.ToString(x.Id) == userId);
+                
                 if (user is null)
                 {
-                    return new BaseResponseDTO
-                    {
-                        Status = false,
-                        StatusMessage = "User Does not exist",
-                        Data = new { }
-                    };
+                    return false;
                 }
-                var existingNgnAccount = await _context.Accounts.FirstOrDefaultAsync(a => Convert.ToString(a.UserId) == userId && a.Currency == "NGN");
+                var existingNgnAccount = await _context.Accounts.FirstOrDefaultAsync(a => a.UserId == user.Id && a.Currency == "NGN");
                 if (existingNgnAccount != null)
                 {
-                    return new BaseResponseDTO
-                    {
-                        Status = false,
-                        StatusMessage = "User already has an NGN account",
-                        Data = new { }
-                    };
+                    return false;
                 }
                 //new Account class.
                 var account = new Account
@@ -75,17 +54,7 @@ namespace P2PWallet.Services.Repositories
                 };
                 await _context.Accounts.AddAsync(account);
                 await _context.SaveChangesAsync();
-                return new BaseResponseDTO
-                {
-                    Status = true,
-                    StatusMessage = "Account Succefully Created",
-                    Data = new AccountDTO
-                    {
-                        AccountNumber = account.AccountNumber,
-                        Balance = account.Balance,
-                        Currency = account.Currency
-                    }
-                };
+                return true;
             }
             catch (Exception ex)
             {

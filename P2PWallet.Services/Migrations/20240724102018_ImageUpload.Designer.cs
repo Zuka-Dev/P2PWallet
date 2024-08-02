@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using P2PWallet.Services.Data;
 
@@ -11,9 +12,11 @@ using P2PWallet.Services.Data;
 namespace P2PWallet.Services.Migrations
 {
     [DbContext(typeof(P2PWalletDbContext))]
-    partial class P2PWalletDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240724102018_ImageUpload")]
+    partial class ImageUpload
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -163,9 +166,6 @@ namespace P2PWallet.Services.Migrations
 
                     b.Property<byte[]>("ImageBase64Byte")
                         .HasColumnType("varbinary(max)");
-
-                    b.Property<bool?>("IsVerified")
-                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()

@@ -49,18 +49,30 @@ namespace P2PWallet.Api.Controllers
             });
         }
 
+
         [HttpPost("user/forgotPassword/{email}")]
         public async Task<IActionResult> ForgotPassword([FromRoute] string email)
         {
             var obj = await _userRepository.ForgotPassword(email);
             return Ok(obj);
         }
+
+
+        [HttpPost("user/verify")]
+        public async Task<IActionResult> VerifyToken([FromBody] VerifyEmailDTO verifyEmailDTO)
+        {
+            var obj = await _userRepository.VerifyToken(verifyEmailDTO);
+            return Ok(obj);
+        }
+
+
         [HttpPost("user/resetPassword")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO resetPasswordDTO)
         {
             var obj = await _userRepository.PasswordReset(resetPasswordDTO);
             return Ok(obj);
         }
+
 
         [Authorize]
         [HttpPost("user/createPin")]
@@ -69,6 +81,8 @@ namespace P2PWallet.Api.Controllers
             var obj = await _userRepository.CreatePin(pin);
             return Ok(obj);
         }
+
+
         [Authorize]
         [HttpPost("user/changePin")]
         public async Task<IActionResult> ChangePin([FromBody] ChangePinDTO pinDto)
@@ -76,6 +90,8 @@ namespace P2PWallet.Api.Controllers
             var obj = await _userRepository.ChangePin(pinDto);
             return Ok(obj);
         }
+
+
         [Authorize]
         [HttpPost("user/changePassword")]
         public async Task<IActionResult> ChangePassword([FromBody] PasswordDTO passwordDTO)
@@ -84,17 +100,20 @@ namespace P2PWallet.Api.Controllers
             return Ok(obj);
         }
 
+
         [Authorize]
-        [HttpGet("user/details/{id:int}")]
-        public async Task<IActionResult> GetUserById([FromRoute] int id)
+        [HttpGet("user/details")]
+        public async Task<IActionResult> GetUserById()
         {
-            var obj = await _userRepository.GetUserById(id);
+            var obj = await _userRepository.GetUserDetails();
             if (!obj.Status) return NotFound(obj);
             return Ok(obj);
 
         }
+
+
         [Authorize]
-        [HttpPut("user/detail")]
+        [HttpPut("user/updateUser")]
         public async Task<IActionResult> UpdateUserById([FromBody] UpdateUserDTO updateUserDTO)
         {
             var obj = await _userRepository.UpdateUserById(updateUserDTO);
@@ -102,6 +121,5 @@ namespace P2PWallet.Api.Controllers
             return Ok(obj);
 
         }
-
     }
 }

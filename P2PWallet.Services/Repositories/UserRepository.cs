@@ -28,13 +28,15 @@ namespace P2PWallet.Services.Repositories
         private readonly IConfiguration _config;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IEmailService _emailService;
+        private readonly IAccountRepository _accountRepository;
 
-        public UserRepository(P2PWalletDbContext context, IConfiguration config,IHttpContextAccessor httpContextAccessor,IEmailService emailService)
+        public UserRepository(P2PWalletDbContext context, IConfiguration config,IHttpContextAccessor httpContextAccessor,IEmailService emailService, IAccountRepository accountRepository)
         {
             _context = context;
             _config = config;
             _httpContextAccessor = httpContextAccessor;
             _emailService = emailService;
+            _accountRepository = accountRepository;
         }
 
         public async Task<bool> CheckUserExists(string email)
@@ -45,27 +47,38 @@ namespace P2PWallet.Services.Repositories
 
         }
 
-        public async Task<BaseResponseDTO> GetUserById(int id)
+        public async Task<BaseResponseDTO> GetUserDetails()
         {
             try
             {
-                var user = await _context.Users.Include(x => x.Accounts).FirstOrDefaultAsync(u => u.Id == id);
-               // .Include(x => x.Accounts)
-            if (user is null)
-            {
-                return new BaseResponseDTO
+                var userIdClaim = _httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber);
+                if (userIdClaim == null)
                 {
-                    Status=false,
-                    StatusMessage="User Doesnt Exist",
-                    Data = new {}
-                };
-            }
-            var accountsDTO =  user.Accounts.Select(a => new AccountDTO
-            {
-                AccountNumber = a.AccountNumber,
-                Balance = a.Balance,
-                Currency = "NGN"
-            }).ToList();
+                    return new BaseResponseDTO
+                    {
+                        Status = false,
+                        StatusMessage = "Missing or invalid user ID in JWT token",
+                        Data = new { }
+                    };
+                }
+                var userId = userIdClaim?.Value;
+                var user = await _context.Users.Include(x => x.Accounts).FirstOrDefaultAsync(x => Convert.ToString(x.Id) == userId);
+                if (user is null)
+                {
+                    return new BaseResponseDTO
+                    {
+                        Status = false,
+                        StatusMessage = "User Does not exist",
+                        Data = new { }
+                    };
+                }
+
+                var accountsDTO = user.Accounts.Select(a => new AccountDTO
+                {
+                    AccountNumber = a.AccountNumber,
+                    Balance = a.Balance,
+                    Currency = "NGN"
+                }).ToList();
                 return new BaseResponseDTO
                 {
                     Status = true,
@@ -78,6 +91,7 @@ namespace P2PWallet.Services.Repositories
                         Email = user.Email,
                         PhoneNumber = user.PhoneNumber,
                         Address = user.Address,
+                        ImageBase64 = user.ImageBase64Byte is null ? "" : Convert.ToBase64String(user.ImageBase64Byte),
                         HasPin = user.PinHash is null || user.PinSalt is null ? false : true,
                         Accounts = accountsDTO
                     }
@@ -110,6 +124,15 @@ namespace P2PWallet.Services.Repositories
                     {
                         Status = false,
                         StatusMessage = "Wrong Credentials. User Email or Password is incorrect",
+                        Data = new { }
+                    };
+                }
+                if (existingUser.IsVerified != true)
+                {
+                    return new BaseResponseDTO
+                    {
+                        Status = false,
+                        StatusMessage = "User Email not Verified",
                         Data = new { }
                     };
                 }
@@ -165,13 +188,26 @@ namespace P2PWallet.Services.Repositories
                     LastName = userDTO.LastName,
                     PasswordHash = passwordHash,
                     PasswordSalt = passwordSalt,
-                    VerificationToken = CreateVerificationToken(),
+                    VerificationToken = Guid.NewGuid().ToString(),
                     Address = userDTO.Address,
                     PhoneNumber = userDTO.PhoneNumber,
-
                 };
+
+
+                // newUser.VerificationToken = Guid.NewGuid().ToString();
+                // user.ResetTokenExpires = DateTime.Now.AddMinutes(30);
+                var frontendUrl = _config.GetSection("Frontend:VerifyUrl").Value;
+                var url = BuildResetUrl(frontendUrl!, newUser.VerificationToken, newUser.Email);
+                await _emailService.SendVerificationEmail(newUser, url!);
+
                 await _context.Users.AddAsync(newUser);
                 await _context.SaveChangesAsync();
+                var account = await _accountRepository.CreateAccount(newUser);
+                if (!account) return new BaseResponseDTO
+                {
+                    Status= false,
+                    StatusMessage= "Account not Created"
+                };
                 return new BaseResponseDTO{
                     Status=true,
                     StatusMessage="User Successfully Created",
@@ -189,6 +225,31 @@ namespace P2PWallet.Services.Repositories
                 throw new Exception(ex.Message);
             }
         }
+        public async Task<BaseResponseDTO> VerifyToken(VerifyEmailDTO verifyEmailDTO)
+        {
+            string token = verifyEmailDTO.Token;
+            string email = verifyEmailDTO.Email;
+
+            var user = await _context.Users.FirstOrDefaultAsync(x => x.Email == email);
+            if(token != user.VerificationToken)
+            {
+                return new BaseResponseDTO
+                {
+                    Status = false,
+                    StatusMessage="Invalid Verification Token",
+                };
+            }
+            user.IsVerified = true;
+            user.VerificationToken = null;
+            user.VerifiedAt = DateTime.Now;
+            await _context.SaveChangesAsync();
+            return new BaseResponseDTO
+            {
+                Status = true,
+                StatusMessage = "Email Verification successful",
+            };
+        }
+        
         public async Task<BaseResponseDTO> ChangePassword(PasswordDTO passwordDTO)
         {
             var userIdClaim = _httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber);
@@ -349,7 +410,6 @@ namespace P2PWallet.Services.Repositories
                 throw;
             }
 
-
         }
 
         public async Task<BaseResponseDTO> ForgotPassword(string email)
@@ -366,7 +426,7 @@ namespace P2PWallet.Services.Repositories
             user.PasswordResetToken = Guid.NewGuid().ToString();
             user.ResetTokenExpires = DateTime.Now.AddMinutes(30);
             await _context.SaveChangesAsync();
-            var frontendUrl = _config.GetSection("Frontend:URL").Value;
+            var frontendUrl = _config.GetSection("Frontend:ResetUrl").Value;
             var url = BuildResetUrl(frontendUrl!, user.PasswordResetToken, user.Email);
             await _emailService.SendResetTokenEmail(user, url!);
             return new BaseResponseDTO
@@ -447,6 +507,8 @@ namespace P2PWallet.Services.Repositories
             user.LastName = updateUserDTO.LastName;
             user.PhoneNumber = updateUserDTO.Phone;
             user.Address = updateUserDTO.Address;
+            user.ImageBase64Byte = Convert.FromBase64String(updateUserDTO.ImageBase64);
+            _context.Users.Update(user);
             await _context.SaveChangesAsync();
             return new BaseResponseDTO
             {
@@ -454,6 +516,7 @@ namespace P2PWallet.Services.Repositories
                 StatusMessage = "Details successfully Updated"
             };
         }
+
         public async Task<BaseResponseDTO> CreateSecurityQuestions(SecurityQuestionDTO request)
         {
             var userIdClaim = _httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber);
@@ -519,19 +582,6 @@ namespace P2PWallet.Services.Repositories
 
 
 
-        private string CreateVerificationToken()
-        {
-            const string src = "abcdefghijklmnopqrstuvwxyz0123456789";
-            int length = 8;
-            var sb = new StringBuilder();
-            Random RNG = new Random();
-            for (var i = 0; i < length; i++)
-            {
-                var c = src[RNG.Next(0, src.Length)];
-                sb.Append(c);
-            }
-            return sb.ToString();
-        }
         private string CreateToken(User user)
         {
             //Claims

@@ -13,5 +13,6 @@ namespace P2PWallet.Services.Interfaces
         Task SendCreditEmail(EmailDTO emailDTO);
         Task SendDebitEmail(EmailDTO emailDTO);
         Task SendResetTokenEmail(User user,string url);
+        Task SendVerificationEmail(User user, string url);
     }
 }
