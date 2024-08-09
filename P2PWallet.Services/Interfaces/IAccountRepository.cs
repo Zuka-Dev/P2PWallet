@@ -10,7 +10,7 @@ namespace P2PWallet.Services.Interfaces
 {
     public interface IAccountRepository
     {
-        Task<BaseResponseDTO> GetAccountsByUserId(int userId);
+        Task<BaseResponseDTO> GetAccountsByUserId();
         Task<bool> CreateAccount(User user);
         Task<BaseResponseDTO> GetAccountDetails(string accountNumber);
         Task<BaseResponseDTO> TransferMoney(TransferDTO transaction);

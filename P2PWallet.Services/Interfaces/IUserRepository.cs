@@ -21,7 +21,7 @@ namespace P2PWallet.Services.Interfaces
         Task<BaseResponseDTO> ChangePassword(PasswordDTO passwordDTO);
         Task<BaseResponseDTO> UpdateUserById(UpdateUserDTO passwordDTO);
 
-        Task<BaseResponseDTO> CreateSecurityQuestions(SecurityQuestionDTO securityQuestionDTO);
+       // Task<BaseResponseDTO> CreateSecurityQuestions(SecurityQuestionDTO securityQuestionDTO);
         
     }
 }

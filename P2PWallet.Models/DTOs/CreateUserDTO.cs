@@ -26,6 +26,5 @@ namespace P2PWallet.Models.DTOs
     {
         public string OldPin {  get; set; }
         public string NewPin { get; set; }
-        public List<SecurityAnswer> SecurityAnswers { get; set; }
     }
 }

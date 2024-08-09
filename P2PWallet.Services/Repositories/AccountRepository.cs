@@ -93,9 +93,20 @@ namespace P2PWallet.Services.Repositories
 
         }
 
-        public async Task<BaseResponseDTO> GetAccountsByUserId(int userId)
+        public async Task<BaseResponseDTO> GetAccountsByUserId()
         {
-            var accounts = await _context.Accounts.Where(acct => acct.UserId == userId).ToListAsync();
+            var userIdClaim = _httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber);
+            if (userIdClaim == null)
+            {
+                new BaseResponseDTO
+                {
+                    Status = false,
+                    StatusMessage = "Missing or invalid user ID in JWT token",
+                    Data = new { }
+                };
+            }
+            var userId = userIdClaim.Value;
+            var accounts = await _context.Accounts.Where(acct => Convert.ToString(acct.UserId) == userId).ToListAsync();
 
             return new BaseResponseDTO
             {

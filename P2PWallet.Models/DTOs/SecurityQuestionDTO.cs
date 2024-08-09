@@ -6,18 +6,22 @@ using System.Threading.Tasks;
 
 namespace P2PWallet.Models.DTOs
 {
-    public class SecurityQuestionDTO
-    {   
-        public List<SecurityQuesDTO> securityQuestions {  get; set; }
-    }
-    public class SecurityQuesDTO
+    public class SeededQ
     {
-        public string Question { get; set; }
-        public string Answer { get; set; }
+        public int Id { get; set; }
+        public string SecurityQuestion { get; set; }
     }
-    public class SecurityAnswer
+
+
+    public class SecurityAnswerDto
     {
-        public int QuestionId { get; set; }
-        public string Answer { get;set; }
+        public int SecurityQuestionId { get; set; }
+        public string SecurityA { get; set; }
     }
+    public class SecurityAnswerCheck
+    {
+        public int SecurityQuestionId { get; }
+        public string SecurityA { get; set; }
+    }
+
 }

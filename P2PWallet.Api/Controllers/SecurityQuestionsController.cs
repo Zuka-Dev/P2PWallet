@@ -12,20 +12,50 @@ namespace P2PWallet.Api.Controllers
     public class SecurityQuestionsController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly ISecurityQuestionRepository _securityQuestionRepository;
 
-        public SecurityQuestionsController(IUserRepository userRepository)
+        public SecurityQuestionsController(IUserRepository userRepository, ISecurityQuestionRepository securityQuestionRepository)
         {
             _userRepository = userRepository;
+            _securityQuestionRepository = securityQuestionRepository;
+        }
+        [HttpGet]
+        public async Task<IActionResult> GetSecurityQuestions()
+        {
+            var sq =  await _securityQuestionRepository.GetSecurityQuestions();
+            return Ok(new BaseResponseDTO
+            {
+                Status = true,
+                StatusMessage = "Seed Security Questions Returned",
+                Data = sq
+            });
         }
         [HttpPost]
-        public async Task<IActionResult> CreateSecurityQuestions(SecurityQuestionDTO securityQuestionDTO)
+        public async Task<IActionResult> CreateSecurityAnswer([FromBody] SecurityAnswerDto securityAnswerDto)
         {
-            var obj = await _userRepository.CreateSecurityQuestions(securityQuestionDTO);
-            if (!obj.Status)
-            {
-                return BadRequest(obj);
-            }
-            return Ok(obj);
+            var secAnswer = _securityQuestionRepository.CreateSecurityAnswer(securityAnswerDto);
+            return Ok(secAnswer);
         }
+        [HttpPost("answer")]
+        public async Task<IActionResult> CheckSecurityAnswer([FromBody] SecurityAnswerCheck securityAnswerCheck)
+        {
+            var obj = await _securityQuestionRepository.CheckSecurityAnswer(securityAnswerCheck);
+            if (!obj)
+            {
+                return BadRequest(new BaseResponseDTO
+                {
+                    Status = false,
+                    StatusMessage = "Wrong Security Answer"
+                });
+            }
+                return Ok(new BaseResponseDTO
+                {
+                    Status = true,
+                    StatusMessage = "Correct Security Answer"
+                });
+            }
+        }
+
+
+        
     }
-}

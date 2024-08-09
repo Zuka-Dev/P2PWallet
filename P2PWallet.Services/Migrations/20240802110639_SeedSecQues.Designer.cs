@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using P2PWallet.Services.Data;
 
@@ -11,9 +12,11 @@ using P2PWallet.Services.Data;
 namespace P2PWallet.Services.Migrations
 {
     [DbContext(typeof(P2PWalletDbContext))]
-    partial class P2PWalletDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240802110639_SeedSecQues")]
+    partial class SeedSecQues
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -98,23 +101,18 @@ namespace P2PWallet.Services.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<byte[]>("AnswerHash")
+                    b.Property<string>("Answer")
                         .IsRequired()
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<byte[]>("AnswerSalt")
+                    b.Property<string>("Question")
                         .IsRequired()
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<int>("SeedSecurityQuestionId")
-                        .HasColumnType("int");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("SeedSecurityQuestionId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -257,19 +255,11 @@ namespace P2PWallet.Services.Migrations
 
             modelBuilder.Entity("P2PWallet.Models.Entities.SecurityQuestion", b =>
                 {
-                    b.HasOne("P2PWallet.Models.Entities.SeededSecurityQuestions", "SeededSecurityQuestions")
-                        .WithMany()
-                        .HasForeignKey("SeedSecurityQuestionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("P2PWallet.Models.Entities.User", "User")
                         .WithOne("SecurityQuestion")
                         .HasForeignKey("P2PWallet.Models.Entities.SecurityQuestion", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("SeededSecurityQuestions");
 
                     b.Navigation("User");
                 });

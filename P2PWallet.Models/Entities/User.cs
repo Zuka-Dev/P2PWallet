@@ -20,7 +20,6 @@ namespace P2PWallet.Models.Entities
         public byte[]? PinHash { get; set; }
         public byte[]? PinSalt { get; set; }
 
-        public List<SecurityQuestion>? SecurityQuestions { get; set; }
         public string Address { get; set; }
         public byte[]? ImageBase64Byte { get; set; }
         public string? VerificationToken { get; set; }
@@ -30,7 +29,7 @@ namespace P2PWallet.Models.Entities
         public DateTime? ResetTokenExpires { get; set; }
 
         public bool? IsVerified { get; set; } = false;
-
+        public virtual SecurityQuestion? SecurityQuestion { get; set; }
         public List<Account> Accounts { get; set; } = new List<Account>();
 
     }

@@ -10,6 +10,7 @@ namespace P2PWallet.Services.Interfaces
     public interface IPaystackFundService
     {
         Task<object> InitialisePaystack(PaystackViewDTO fund);
-        Task<object> Webhook(Object obj);
+        Task<BaseResponseDTO> Webhook(Object obj);
+        Task<BaseResponseDTO> GetAllDeposits();
     }
 }

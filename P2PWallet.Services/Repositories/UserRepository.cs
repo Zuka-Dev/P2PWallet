@@ -30,7 +30,7 @@ namespace P2PWallet.Services.Repositories
         private readonly IEmailService _emailService;
         private readonly IAccountRepository _accountRepository;
 
-        public UserRepository(P2PWalletDbContext context, IConfiguration config,IHttpContextAccessor httpContextAccessor,IEmailService emailService, IAccountRepository accountRepository)
+        public UserRepository(P2PWalletDbContext context, IConfiguration config, IHttpContextAccessor httpContextAccessor, IEmailService emailService, IAccountRepository accountRepository)
         {
             _context = context;
             _config = config;
@@ -79,6 +79,7 @@ namespace P2PWallet.Services.Repositories
                     Balance = a.Balance,
                     Currency = "NGN"
                 }).ToList();
+            
                 return new BaseResponseDTO
                 {
                     Status = true,
@@ -93,7 +94,7 @@ namespace P2PWallet.Services.Repositories
                         Address = user.Address,
                         ImageBase64 = user.ImageBase64Byte is null ? "" : Convert.ToBase64String(user.ImageBase64Byte),
                         HasPin = user.PinHash is null || user.PinSalt is null ? false : true,
-                        Accounts = accountsDTO
+                        Accounts = accountsDTO,
                     }
                 };
             }catch(Exception ex)
@@ -127,6 +128,7 @@ namespace P2PWallet.Services.Repositories
                         Data = new { }
                     };
                 }
+                
                 if (existingUser.IsVerified != true)
                 {
                     return new BaseResponseDTO
@@ -136,6 +138,7 @@ namespace P2PWallet.Services.Repositories
                         Data = new { }
                     };
                 }
+                
                 //Create Token
                 var token =  CreateToken(existingUser);
                 //Return Response 
@@ -159,16 +162,6 @@ namespace P2PWallet.Services.Repositories
         {
             try
             {
-                // Validate email format using regular expression
-                if (!Regex.IsMatch(userDTO.Email, @"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"))
-                {
-                    return new BaseResponseDTO
-                    {
-                        Status = false,
-                        StatusMessage = "Invalid email format. Please provide a valid email ending in '.com'.",
-                        Data = new { }
-                    };
-                }
                 if (await _context.Users.FirstOrDefaultAsync(x => x.Email == userDTO.Email) is not null || 
                     await _context.Users.FirstOrDefaultAsync(x => x.Username == userDTO.Username) is not null)
                 {
@@ -362,9 +355,9 @@ namespace P2PWallet.Services.Repositories
             }
             var userId = userIdClaim?.Value;
             try { 
-            var user = await _context.Users.Include(u=>u.SecurityQuestions).FirstOrDefaultAsync(x => Convert.ToString(x.Id) == userId);
-            
-            if (user!.PinHash is null||user.PinSalt is null)
+            var user = await _context.Users.Include(x=>x.SecurityQuestion).FirstOrDefaultAsync(x => Convert.ToString(x.Id) == userId);
+                //.Include(u=>u.SecurityQuestions)
+                if (user!.PinHash is null||user.PinSalt is null)
             {
                 return new BaseResponseDTO
                 {
@@ -383,18 +376,8 @@ namespace P2PWallet.Services.Repositories
                     Data = new { }
                 };
             }
-            foreach (var item in pinDTO.SecurityAnswers)
-            {
-                    var question = user.SecurityQuestions.FirstOrDefault(x => x.Id == item.QuestionId);
-                    if(question!.Answer != question.Answer || question is null)
-                    {
-                        return new BaseResponseDTO
-                        {
-                            Status = false,
-                            StatusMessage = "Wrong Answer to the questions"
-                        };
-                    }
-            }
+        
+
             HashPin(pinDTO.NewPin, out byte[] pinHash, out byte[] pinSalt);
             user.PinHash= pinHash;
             user.PinSalt = pinSalt;
@@ -517,54 +500,7 @@ namespace P2PWallet.Services.Repositories
             };
         }
 
-        public async Task<BaseResponseDTO> CreateSecurityQuestions(SecurityQuestionDTO request)
-        {
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber);
-            if (userIdClaim == null)
-            {
-                return new BaseResponseDTO
-                {
-                    Status = false,
-                    StatusMessage = "Missing or invalid user ID in JWT token",
-                    Data = new { }
-                };
-            }
-            var userId = userIdClaim?.Value;
-            var user = await _context.Users.FirstOrDefaultAsync(x => Convert.ToString(x.Id) == userId);
-            if (user is null)
-            {
-                return new BaseResponseDTO
-                {
-                    Status = false,
-                    StatusMessage = "User Does not exist",
-                    Data = new { }
-                };
-            }
-            try
-            {
-                foreach (var question in request.securityQuestions)
-                {
-                    var securityQuestion = new SecurityQuestion
-                    {
-                        Question = question.Question,
-                        Answer = question.Answer,
-                        UserId = Convert.ToInt32(userId)
-                    };
-                    await _context.SecurityQuestions.AddAsync(securityQuestion);
-                }
-                await _context.SaveChangesAsync();
-                return new BaseResponseDTO
-                {
-                    Status = true,
-                    StatusMessage = "Security Questions Created"
-                };
-            }
-            catch (Exception ex)
-            {
-                throw; 
-            }
-        }
-
+      
 
 
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using P2PWallet.Models.DTOs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,7 +7,12 @@ using System.Threading.Tasks;
 
 namespace P2PWallet.Services.Interfaces
 {
-    internal interface ISecurityQuestionRepository
+    public interface ISecurityQuestionRepository
     {
+        Task<List<SeededQ>> GetSecurityQuestions();
+
+        Task<BaseResponseDTO> CreateSecurityAnswer(SecurityAnswerDto securityAnswerDto);
+
+        Task<bool> CheckSecurityAnswer(SecurityAnswerCheck securityAnswerCheck);
     }
 }

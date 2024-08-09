@@ -11,13 +11,14 @@ namespace P2PWallet.Models.Entities
     public class SecurityQuestion
     {
         public int Id { get; set; }
-        [Required]
-        public string Question { get; set; }
-        public string Answer { get; set; }
-
+        public byte[] AnswerSalt { get; set; }
+        public byte[] AnswerHash { get; set; }
         [ForeignKey("User")]
         public int UserId { get; set; }
+        [ForeignKey("SeededSecurityQuestions")]
+        public int SeedSecurityQuestionId {  get; set; }
 
         public virtual User User { get; set; }
+        public virtual SeededSecurityQuestions SeededSecurityQuestions { get; set; }
     }
 }

@@ -18,10 +18,10 @@ namespace P2PWallet.Api.Controllers
             _accountRepository = accountRepository;
         }
       
-        [HttpGet("{id:int}")]
-        public async Task<IActionResult> GetAccountsByUserId([FromRoute] int id)
+        [HttpGet()]
+        public async Task<IActionResult> GetAccountsByUserId()
         {
-            var obj = await _accountRepository.GetAccountsByUserId(id);
+            var obj = await _accountRepository.GetAccountsByUserId();
             if (!obj.Status) return BadRequest(obj);
             return Ok(obj);
         }

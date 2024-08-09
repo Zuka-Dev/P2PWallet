@@ -17,9 +17,13 @@ namespace P2PWallet.Services.Validators
             RuleFor(x=>x.Password)
                 .MinimumLength(8).WithMessage("Password must be at least 8 characters long.")
                 .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
-                .Matches("[^a-zA-Z0-9]").WithMessage("Password must contain at least one special character.");
+                .Matches(@"[@*""\-+$£']").WithMessage("Password must contain at least one special character.");
             //Dont include whitespace
-
+            RuleFor(x => x.PhoneNumber)
+                .NotEmpty().WithMessage("Phone number is required")
+                .MinimumLength(11).WithMessage("Phone number must be more than 14 digits")
+                .MaximumLength(14).WithMessage("Phone number must be less than 14 digits");
+                
         }
     }
     public class PinDTOValidator : AbstractValidator<CreatePinDTO>

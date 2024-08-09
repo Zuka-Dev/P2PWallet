@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using P2PWallet.Services.Data;
 using P2PWallet.Services.Interfaces;
 using P2PWallet.Services.Repositories;
+using P2PWallet.Services.Validators;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text;
 
@@ -33,10 +34,7 @@ builder.Services.AddSwaggerGen(c =>
 );
 //db connection
 builder.Services.AddDbContext<P2PWalletDbContext>(options =>
-options.UseSqlServer(
-    builder.Configuration.GetConnectionString("DefaultConnection")
-)
-);
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddCors(option =>
     option.AddPolicy(corsPolicy, policy =>
@@ -46,11 +44,14 @@ builder.Services.AddCors(option =>
 
 
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ISecurityQuestionRepository, SecurityQuestionRepository>();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<ITransferRepository, TransferRepository>();
 builder.Services.AddScoped<IPaystackFundService, PaystackFundService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<UserDTOValidator>();
+builder.Services.AddScoped<PinDTOValidator>();
 
 
 
@@ -75,8 +76,17 @@ if (app.Environment.IsDevelopment())
 }
 using (var scope = app.Services.CreateScope())
 {
+    try
+    {
+
     var dbContext = scope.ServiceProvider.GetRequiredService<P2PWalletDbContext>();
     dbContext.Database.Migrate();
+    SeedQuestionInitialiser.Initialize(dbContext);
+    }
+    catch (Exception ex)
+    {
+        throw;
+    }
  
 }
 app.UseHttpsRedirection(); 

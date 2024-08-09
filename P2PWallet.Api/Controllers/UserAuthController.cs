@@ -1,9 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using P2PWallet.Models.DTOs;
 using P2PWallet.Models.Entities;
 using P2PWallet.Services.Interfaces;
+using P2PWallet.Services.Validators;
 
 namespace P2PWallet.Api.Controllers
 {
@@ -12,16 +14,26 @@ namespace P2PWallet.Api.Controllers
     public class UserAuthController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly UserDTOValidator _userValidation;
 
-        public UserAuthController(IUserRepository userRepository)
+        public UserAuthController(IUserRepository userRepository, UserDTOValidator userValidation)
         {
             _userRepository = userRepository;
+            _userValidation = userValidation;
         }
 
-
+        
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] CreateUserDTO newUser)
         {
+            var validationResult = _userValidation.Validate(newUser);
+            if (!validationResult.IsValid) {
+                var errors = validationResult.Errors.Select(e => e.ErrorMessage);
+                return BadRequest(new BaseResponseDTO { 
+                    Status = false, StatusMessage = string.Join(",", errors)
+                }
+                );
+            }
             var obj = await _userRepository.RegisterUser(newUser);
             return CreatedAtAction(nameof(Register), obj);
         }
@@ -29,7 +41,7 @@ namespace P2PWallet.Api.Controllers
 
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginUserDTO newUser)
-        {
+       {
             var obj = await _userRepository.LoginUser(newUser);
             if (!obj.Status) return NotFound(obj);
             return Ok(obj);

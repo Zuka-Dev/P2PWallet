@@ -17,6 +17,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Security.Cryptography.Xml;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -130,43 +131,44 @@ namespace P2PWallet.Services.Repositories
             }
         }
         //NG ROCK
-        public async Task<object> Webhook(Object obj)
+        public async Task<BaseResponseDTO> Webhook(object obj)
         {
-            
             try
             {
-
-                //Deserialise the jsonData
+                // Deserialise the jsonData
                 var jsonData = JsonConvert.DeserializeObject<WebhookDTO>(obj.ToString());
-                //Check for a user based on the reference and status from Deposit table
-                var deposit = await _context.Deposits.FirstOrDefaultAsync(x => x.Reference == jsonData.Data.Reference && x.Status == "Pending");
-                //Edit the balance of the users account
-                if (deposit is null)
-                {
-                    return new BaseResponseDTO
-                    {
-                        Status = false,
-                        StatusMessage = "Deposit doesnt exist",
-                        Data = new { }
-                    };
-                }
-                var userAccount = await _context.Accounts.FirstOrDefaultAsync(x => x.UserId == deposit.userId && x.Currency == deposit.Currency);
-                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userAccount.UserId);
-                if (userAccount is null)
-                {
-                    return new BaseResponseDTO
-                    {
-                        Status = false,
-                        StatusMessage = "Account doesnt exist",
-                        Data = new { }
-                    };
-                }
-                userAccount.Balance += deposit.Amount;
 
-                // Change status
+                // Check for a user based on the reference and status from Deposit table
+                var deposit = await _context.Deposits.FirstOrDefaultAsync(x => x.Reference == jsonData.Data.Reference && x.Status == "Pending");
+
+                if (deposit == null)
+                {
+                    return new BaseResponseDTO
+                    {
+                        Status = false,
+                        StatusMessage = "Deposit doesn't exist",
+                        Data = new { }
+                    };
+                }
+
+                var userAccount = await _context.Accounts.FirstOrDefaultAsync(x => x.UserId == deposit.userId && x.Currency == deposit.Currency);
+
+                if (userAccount == null)
+                {
+                    return new BaseResponseDTO
+                    {
+                        Status = false,
+                        StatusMessage = "Account doesn't exist",
+                        Data = new { }
+                    };
+                }
+
+                userAccount.Balance += deposit.Amount;
                 deposit.Status = "Successful";
-                // Add user.
+
                 await _context.SaveChangesAsync();
+
+                var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userAccount.UserId);
 
                 var creditDTO = new EmailDTO
                 {
@@ -179,14 +181,26 @@ namespace P2PWallet.Services.Repositories
                     LastName = user.LastName,
                     TransactionDate = deposit.Date.ToString(),
                     TransactionID = deposit.Id.ToString(),
-
                 };
+
                 await _emailService.SendCreditEmail(creditDTO);
-                return new OkResult();
+
+                return new BaseResponseDTO
+                {
+                    Status = true,
+                    StatusMessage = "Success",
+                    Data = new { }
+                };
             }
             catch (Exception ex)
             {
-                throw;
+                // Log the exception (ex) as needed
+                return new BaseResponseDTO
+                {
+                    Status = false,
+                    StatusMessage = "An error occurred",
+                    Data = new { Error = ex.Message }
+                };
             }
         }
         private static string GenerateReference()
@@ -202,7 +216,25 @@ namespace P2PWallet.Services.Repositories
             }
             return sb.ToString();
         }
-       
+
+        public async Task<BaseResponseDTO> GetAllDeposits()
+        {
+            try { 
+            var userId = _httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber).Value;
+            var user = await _context.Users.Include(x => x.Accounts).FirstOrDefaultAsync(x => Convert.ToString(x.Id) == userId);
+            if (user.Accounts.Count == 0) return null;
+            var acctNum = user.Accounts.FirstOrDefault(x => x.Currency == "NGN").AccountNumber;
+                var deposits = await _context.Deposits.Where(x => x.userId == user.Id && x.Status == "Successful").ToListAsync();
+            return new BaseResponseDTO
+            {
+                Status = true,
+                StatusMessage = "All deposits returned",
+                Data = deposits
+            };
+
+            }
+            catch (Exception ex) { throw; }
+        }
     }
 
 }
