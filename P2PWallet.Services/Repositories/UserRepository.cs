@@ -487,10 +487,14 @@ namespace P2PWallet.Services.Repositories
                     Data = new { }
                 };
             }
+
             user.LastName = updateUserDTO.LastName;
             user.PhoneNumber = updateUserDTO.Phone;
             user.Address = updateUserDTO.Address;
+            if (user.ImageBase64Byte is not null)
+            {
             user.ImageBase64Byte = Convert.FromBase64String(updateUserDTO.ImageBase64);
+            }
             _context.Users.Update(user);
             await _context.SaveChangesAsync();
             return new BaseResponseDTO

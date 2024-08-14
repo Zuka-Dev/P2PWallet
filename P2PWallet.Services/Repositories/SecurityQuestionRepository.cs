@@ -45,6 +45,15 @@ namespace P2PWallet.Services.Repositories
             var userIdClaim = _httpContextAccessor.HttpContext?.User?.Claims.FirstOrDefault(c => c.Type == ClaimTypes.SerialNumber);
    
             var userId = userIdClaim?.Value;
+            var question = await _context.SecurityQuestions.FirstOrDefaultAsync(x=> Convert.ToString(x.UserId) == userId);
+            if(question is not null)
+            {
+                return new BaseResponseDTO
+                {
+                    Status = false,
+                    StatusMessage = "Security question already created"
+                };
+            }
             //Hash answer
             HashSecurityAnswer(securityAnswerDto.SecurityA, out byte[] answerSalt, out byte[] answerHash);
             // Map Answer
@@ -87,6 +96,17 @@ namespace P2PWallet.Services.Repositories
                 return questions;
             }
         }
+
+        public async Task<SeededQ> GetSecurityQuestionsById(int id)
+        {
+            var question = await _context.SeededSecurityQuestions.FirstOrDefaultAsync(question => question.Id == id);
+            return new SeededQ
+            {
+                 SecurityQuestion = question.SecurityQuestion,
+                 Id = id
+            };
+        }
+
 
         private void HashSecurityAnswer(string answer, out byte[] answerSalt, out byte[] answerHash) {
             using (var hmac = new HMACSHA512()){

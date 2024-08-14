@@ -33,8 +33,19 @@ namespace P2PWallet.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateSecurityAnswer([FromBody] SecurityAnswerDto securityAnswerDto)
         {
-            var secAnswer = _securityQuestionRepository.CreateSecurityAnswer(securityAnswerDto);
+            var secAnswer = await _securityQuestionRepository.CreateSecurityAnswer(securityAnswerDto);
             return Ok(secAnswer);
+        }
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetSecurityQuestionById([FromRoute] int id)
+        {
+            var question = await _securityQuestionRepository.GetSecurityQuestionsById(id);
+            return Ok(new BaseResponseDTO
+            {
+                Status = true,
+                StatusMessage = "Security Question Returned",
+                Data = question
+            });
         }
         [HttpPost("answer")]
         public async Task<IActionResult> CheckSecurityAnswer([FromBody] SecurityAnswerCheck securityAnswerCheck)
