@@ -51,6 +51,8 @@ builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<ITransferRepository, TransferRepository>();
 builder.Services.AddScoped<IPaystackFundService, PaystackFundService>();
+builder.Services.AddScoped<IForeignWalletRepository, ForeignWalletRepository>();
+builder.Services.AddScoped<IGLSevice, GLService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 builder.Services.AddScoped<IStatementService, StatementService>();
