@@ -134,5 +134,38 @@ namespace P2PWallet.Services.Repositories
 
             return $"{accountNumber.Substring(0, 3)}xxx{accountNumber.Substring(accountNumber.Length - 3)}";
         }
+
+        public async Task SendEmailWithAttachment(string toEmail, string subject, string body, string attachmentName, byte[] attachmentContent, string contentType)
+        {
+            var email = new MimeMessage();
+            email.From.Add(MailboxAddress.Parse(_smtpUsername));
+            email.To.Add(MailboxAddress.Parse(toEmail));
+            email.Subject = subject;
+
+            var builder = new BodyBuilder
+            {
+                HtmlBody = body
+            };
+
+            builder.Attachments.Add(attachmentName, attachmentContent, ContentType.Parse(contentType));
+
+            email.Body = builder.ToMessageBody();
+
+            using var smtp = new SmtpClient();
+            try
+            {
+                await smtp.ConnectAsync(_smtpServer, _smtpPort, SecureSocketOptions.StartTls);
+                await smtp.AuthenticateAsync(_smtpUsername, _smtpPassword);
+                await smtp.SendAsync(email);
+                await smtp.DisconnectAsync(true);
+
+                _logger.LogInformation($"Email with attachment sent successfully to {toEmail}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"Failed to send email with attachment to {toEmail}");
+                throw;
+            }
+        }
     }
 }
