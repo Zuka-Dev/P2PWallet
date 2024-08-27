@@ -20,5 +20,7 @@ namespace P2PWallet.Services.Data
         public DbSet<SecurityQuestion> SecurityQuestions  { get; set; }
         public DbSet<SeededSecurityQuestions> SeededSecurityQuestions { get; set;}
         public DbSet<GeneralLedger> GeneralLedgers { get; set; }
+
+        public DbSet<GeneralLedgerTransaction> GeneralLedgerTransactions { get; set; }
     }
 }

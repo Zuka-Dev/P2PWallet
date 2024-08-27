@@ -82,6 +82,7 @@ namespace P2PWallet.Services.Repositories
                     Amount = creationCharge,
                     Balance = ledger.Balance
                 };
+                await _context.GeneralLedgerTransactions.AddAsync(ledgerTransaction);
                 var newAccount = new Account
                 {
                     AccountNumber = GenerateAcctNumber.GenerateAccountNumber(DateTime.Now),

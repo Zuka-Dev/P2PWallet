@@ -77,7 +77,7 @@ namespace P2PWallet.Services.Repositories
                 {
                     AccountNumber = a.AccountNumber,
                     Balance = a.Balance,
-                    Currency = "NGN"
+                    Currency = a.Currency
                 }).ToList();
             
                 return new BaseResponseDTO
