@@ -6,9 +6,10 @@ using System.Threading.Tasks;
 
 namespace P2PWallet.Models.DTOs
 {
-    public class CreateGLDTO
+    public class FundForeignWalletDTO
     {
-        public string Purpose { get; set; } = string.Empty;
-        public string GLCurrency { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string Currency { get; set; }
+        public string Pin {  get; set; }
     }
 }

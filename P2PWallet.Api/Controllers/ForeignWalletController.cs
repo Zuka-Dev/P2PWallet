@@ -28,5 +28,11 @@ namespace P2PWallet.Api.Controllers
             }
             return Ok(obj);
         }
+        [HttpPost("fund")]
+        public async Task<IActionResult> FundForeignWallet(FundForeignWalletDTO fundForeignWalletDTO)
+        {
+            var obj = await _foreignWalletRepository.FundForeignWallet(fundForeignWalletDTO);
+            return Ok(obj);
+        }
     }
 }

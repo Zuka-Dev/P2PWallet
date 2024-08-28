@@ -83,6 +83,7 @@ namespace P2PWallet.Api.Controllers
                 _logger.LogError($"Error processing webhook: {ex.Message}");
             }
         }
+        
         private string GenerateHash(string requestBody, string webhookSecret)
         {
             var secretBytes = Encoding.UTF8.GetBytes(webhookSecret);

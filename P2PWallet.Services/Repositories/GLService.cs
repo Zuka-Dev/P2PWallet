@@ -22,7 +22,7 @@ namespace P2PWallet.Services.Repositories
         }
         public async Task<GeneralLedger> GetOrCreateGL(CreateGLDTO createGLDTO)
         {
-            var ledger = await _context.GeneralLedgers.FirstOrDefaultAsync(x=>x.Currency.Equals(createGLDTO.GLCurrency));
+            var ledger = await _context.GeneralLedgers.FirstOrDefaultAsync(x=>x.Currency.Equals(createGLDTO.GLCurrency) && x.Purpose.Equals(createGLDTO.Purpose));
             if (ledger is not null)
             {
                 return ledger;
@@ -32,7 +32,9 @@ namespace P2PWallet.Services.Repositories
                 GLAccountNo= GenerateAcctNumber.GenerateGLAccountNumber(createGLDTO.GLCurrency),
                 Balance=0m,
                 Currency=createGLDTO.GLCurrency,
-                Description=$"{createGLDTO.GLCurrency} charges"
+                Description=GLConstants.GetDescription(createGLDTO.Purpose),
+                Purpose= createGLDTO.Purpose
+                
 
             };
             await _context.GeneralLedgers.AddAsync(ledger);

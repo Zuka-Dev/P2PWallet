@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 
 namespace P2PWallet.Models.Entities
 {
-    public class GeneralLedger
+    public class ForeignWalletFundingTransaction
     {
         public int Id { get; set; }
-        public string GLAccountNo { get; set; } = string.Empty;
-        public string Purpose { get; set; } = string.Empty;
-        public string Description { get; set; } =  string.Empty;
-        public decimal Balance { get; set; }
+        public string BeneficiaryAccountNumber { get; set; }
+        public decimal Amount { get; set; }
+        public decimal ExchangeRate { get; set; }
         public string Currency { get; set; } = string.Empty;
+        public DateTime TransactionTime { get; set; }
     }
 }

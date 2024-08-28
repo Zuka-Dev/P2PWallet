@@ -21,16 +21,23 @@ namespace P2PWallet.Services.Utilities
         }
         public static string GenerateGLAccountNumber(string currency)
         {
-            const string src = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            int length = 7;
-            var sb = new StringBuilder();
+            const string src = "0123456789";
+            int length2 = 4;
+            var sb1 = new StringBuilder();
+            var sb2 = new StringBuilder();
             Random RNG = new Random();
-            for (var i = 0; i < length; i++)
+            for (var i = 0; i < 1; i++)
+            {
+                sb1.Append("00");
+                var c = src[RNG.Next(0, src.Length)];
+                sb1.Append(c);
+            }            
+            for (var i = 0; i < length2; i++)
             {
                 var c = src[RNG.Next(0, src.Length)];
-                sb.Append(c);
+                sb2.Append(c);
             }
-            return $"{sb.ToString()}${currency}";
+            return $"{sb1.ToString()}{currency}{sb2.ToString()}";
         }
 
     }

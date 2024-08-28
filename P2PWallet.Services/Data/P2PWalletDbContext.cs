@@ -22,5 +22,7 @@ namespace P2PWallet.Services.Data
         public DbSet<GeneralLedger> GeneralLedgers { get; set; }
 
         public DbSet<GeneralLedgerTransaction> GeneralLedgerTransactions { get; set; }
+
+        public DbSet<ForeignWalletFundingTransaction> ForeignWalletFundingTransactions { get;set; }
     }
 }

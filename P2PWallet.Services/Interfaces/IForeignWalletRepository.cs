@@ -10,5 +10,7 @@ namespace P2PWallet.Services.Interfaces
     public interface IForeignWalletRepository
     {
         Task<BaseResponseDTO> CreateForeignWallet(CreateForeignWalletDTo createForeignWalletDTo);
+
+        Task<BaseResponseDTO> FundForeignWallet(FundForeignWalletDTO fundForeignWalletDTO);
     }
 }
