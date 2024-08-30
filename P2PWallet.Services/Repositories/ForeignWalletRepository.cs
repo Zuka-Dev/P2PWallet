@@ -23,13 +23,15 @@ namespace P2PWallet.Services.Repositories
         private readonly P2PWalletDbContext _context;
         private readonly IConfiguration _config;
         private readonly IGLSevice _gLSevice;
+        private readonly IEmailService _emailService;
 
-        public ForeignWalletRepository(IHttpContextAccessor httpContextAccessor, P2PWalletDbContext context, IConfiguration config, IGLSevice gLSevice)
+        public ForeignWalletRepository(IHttpContextAccessor httpContextAccessor, P2PWalletDbContext context, IConfiguration config, IGLSevice gLSevice, IEmailService emailService)
         {
             _httpContextAccessor = httpContextAccessor;
             _context = context;
             _config = config;
             _gLSevice = gLSevice;
+            _emailService = emailService;
         }
         public async Task<BaseResponseDTO> CreateForeignWallet(CreateForeignWalletDTo createForeignWalletDTo)
         {
@@ -143,6 +145,14 @@ namespace P2PWallet.Services.Repositories
             var user = await _context.Users.FirstOrDefaultAsync(x => x.Id == userId);
             var userNairaAccount = await _context.Accounts.FirstOrDefaultAsync(x => x.UserId== userId && x.Currency == "NGN");
             var userForeignAccount = await _context.Accounts.FirstOrDefaultAsync(x => x.UserId == userId && x.Currency == fundForeignWalletDTO.Currency);
+            if(userForeignAccount is null)
+            {
+                return new BaseResponseDTO
+                {
+                    Status=false,
+                    StatusMessage="User doesnt have an account in this currency"
+                };
+            }
             if (!VerifyPin(fundForeignWalletDTO.Pin, user.PinHash, user.PinSalt))
             {
                 return new BaseResponseDTO { Status = false, StatusMessage = "Incorrect Pin" };
@@ -207,6 +217,35 @@ namespace P2PWallet.Services.Repositories
                 });
                 await _context.SaveChangesAsync();
                 await dbTransaction.CommitAsync();
+                var transactionId = Guid.NewGuid().ToString();
+                Task.Run(() =>
+                {
+                    _emailService.SendCreditEmail(new EmailDTO {
+                        Email=user.Email,
+                        FirstName=user.FirstName,
+                        LastName = user.LastName,
+                        AccountNumber=userForeignAccount.AccountNumber,
+                        Currency = fundForeignWalletDTO.Currency,
+                        Amount = fundForeignWalletDTO.Amount,
+                        Balance = userForeignAccount.Balance,
+                        TransactionID=  Guid.NewGuid().ToString(),
+                        TransactionDate= DateTime.Now.ToString(),
+                    });
+
+                    _emailService.SendDebitEmail(new EmailDTO
+                    {
+                        Email = user.Email,
+                        FirstName = user.FirstName,
+                        LastName = user.LastName,
+                        AccountNumber = userNairaAccount.AccountNumber,
+                        Currency = userNairaAccount.Currency,
+                        Amount = amount,
+                        Balance = userNairaAccount.Balance,
+                        TransactionID = transactionId,
+                        TransactionDate = DateTime.Now.ToString(),
+                    });
+
+                });
                 return new BaseResponseDTO
                 {
                     Status = true,
